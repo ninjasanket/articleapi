@@ -50,9 +50,9 @@ class Article extends REST_Controller {
     public function index_put($id)
     {
         $input = $this->put();
-        $this->article->updateArticle($input, $id);
+        $resp = $this->article->updateArticle($input, $id);
      
-        $this->response(['Item updated successfully.'], REST_Controller::HTTP_OK);
+        $this->response($resp, REST_Controller::HTTP_OK);
     }
      
     /**

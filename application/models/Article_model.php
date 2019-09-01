@@ -7,27 +7,30 @@ class Article_model extends CI_Model
     }
 
     /**
-      #TODO: 1. limit offeset
-             2. add dates
-    */
+    #TODO: 1. limit offeset
+    2. add dates
+     */
 
     public function getArticles($id)
     {
+        if (intval($id) > 0 && $this->checkArticleExists($id) == false) {
+            return array('status' => false, 'message' => 'Invalid article id provided.');
+        }
         $this->db->select('a.*, aa.name as authorName, aa.url as authorUrl, ap.name as publisherName, ap.url as publisherUrl, ap.logo_url as logoUrl, ap.width, ap.height');
         $this->db->from('article a');
         $this->db->join('article_map am', 'am.article_id = a.id');
         $this->db->join('article_author aa', 'aa.id = am.author_id');
         $this->db->join('article_publisher ap', 'ap.id = am.publisher_id');
         $this->db->where('active', '1');
-        $single = false; 
+        $single = false;
         if (intval($id) > 0) {
             $this->db->where('a.id', $id);
-            $single = true; 
+            $single = true;
         }
         $article_data = $this->db->get()->result_array();
-        if (empty($article_data)) {
-            return array('status' => false, 'message' => 'Article does not exists.');  
-        }
+        // if (empty($article_data)) {
+        //     return array('status' => false, 'message' => 'Article does not exists.');
+        // }
         $api_resp = $this->formatResponse($article_data, $single);
         return $api_resp;
     }
@@ -48,15 +51,16 @@ class Article_model extends CI_Model
             $response['articleBody'] = $article['body'];
             $resp[] = $response;
         }
-        return ($single)? $response : $resp;
+        return ($single) ? $response : $resp;
     }
 
-    public function getKeyswords($id){
+    public function getKeyswords($id)
+    {
         $keywords = $this->db->select('keyword')->from('article_keywords')->where('article_id', $id)->get()->result_array();
         if (!empty($keywords)) {
-           $keywords = array_map(function($arr) {
-                           return $arr['keyword'];  
-                       }, $keywords);
+            $keywords = array_map(function ($arr) {
+                return $arr['keyword'];
+            }, $keywords);
         }
         return (!empty($keywords)) ? $keywords : array();
     }
@@ -64,9 +68,9 @@ class Article_model extends CI_Model
     {
         $validate_resp = $this->validatePostData($article_arr);
         if ($validate_resp['status'] == true) {
-            $map['article_id'] = $this->saveArticleData($article_arr['article'], 'insert');
-            $map['author_id'] = $this->saveAuthorData($article_arr['author'], 'insert');
-            $map['publisher_id'] = $this->savePublisherData($article_arr['publisher'], 'insert');
+            $map['article_id'] = $this->saveArticleData('insert', $article_arr['article']);
+            $map['author_id'] = $this->saveAuthorData('insert', $article_arr['author']);
+            $map['publisher_id'] = $this->savePublisherData('insert', $article_arr['publisher']);
 
             $this->saveArticleMap($map);
             if (count($article_arr['keywords']) > 0 && $map['article_id']) {
@@ -77,82 +81,8 @@ class Article_model extends CI_Model
             return $validate_resp;
         }
     }
-
-    public function saveArticleMap($map)
-    {
-        $this->db->insert('article_map', $map);
-    }
-
-    public function saveArticleData($article)
-    {
-        $insert_arr = array(
-            'name' => trim($article['name']),
-            'image' => trim($article['image']),
-            'url' => trim($article['url']),
-            'headline' => trim($article['headline']),
-            'language' => trim($article['language']),
-            'section' => trim($article['section']),
-            'body' => trim($article['body']),
-        );
-        $this->db->insert('article', $insert_arr);
-        return $this->db->insert_id();
-    }
-    public function saveAuthorData($author, $action)
-    {
-
-        $result = $this->db->select('id')->from('article_author')->where('name', trim($author['name']))->get()->row_array();
-        if ($action == 'insert' && $result['id']) {
-            return $result['id'];
-        }
-
-        if (!$result['id']) {
-            $insert_arr = array(
-                'name' => addslashes(trim($author['name'])),
-                'url' => trim($author['url']),
-            );
-            $this->db->insert('article_author', $insert_arr);
-            return $this->db->insert_id();
-        } else {
-            $this->db->update('article_author', $author);
-            $this->db->where('id', $result['id']);
-        }
-    }
-    public function savePublisherData($publisher, $action)
-    {
-        $result = $this->db->select('id')->from('article_publisher')->where('name', trim($publisher['name']))->get()->row_array();
-
-        if ($action == 'insert' && $result['id']) {
-            return $result['id'];
-        }
-        if (!$result['id']) {
-            $insert_arr = array(
-                'name' => addslashes(trim($publisher['name'])),
-                'logo_url' => trim($publisher['logo']),
-                'width' => trim($publisher['width']),
-                'height' => trim($publisher['height']),
-            );
-            $this->db->insert('article_publisher', $insert_arr);
-            return $this->db->insert_id();
-        } else {
-            $this->db->update('article_publisher', $publisher);
-            $this->db->where('id', $result['id']);
-        }
-    }
-
-    public function saveKeywords($keywords, $id)
-    {
-        $this->db->where('article_id', $id);
-        $this->db->delete('article_keywords');
-        $insert_data = array();
-        foreach ($keywords as $keyword) {
-            $insert_data[] = array('article_id' => $id, 'keyword' => $keyword);
-        }
-        $this->db->insert_batch('article_keywords', $insert_data);
-    }
-
     public function validatePostData($post_data)
     {
-
         $required = array(
             'article' => array('image', 'url', 'headline', 'name', 'language', 'section', 'body', 'publishedDate'),
             'author' => array('name', 'url'),
@@ -167,7 +97,6 @@ class Article_model extends CI_Model
         }
         return $validate_resp;
     }
-
     public function validate($data, $validator, $k)
     {
         foreach ($validator as $v) {
@@ -177,18 +106,142 @@ class Article_model extends CI_Model
         }
         return array('status' => true);
     }
-
+    public function saveArticleData($action, $article, $id = 0)
+    {
+        if ($action == 'insert') {
+            $insert_arr = array(
+                'name' => trim($article['name']),
+                'image' => trim($article['image']),
+                'url' => trim($article['url']),
+                'headline' => trim($article['headline']),
+                'language' => trim($article['language']),
+                'section' => trim($article['section']),
+                'body' => trim($article['body']),
+            );
+            $this->db->insert('article', $insert_arr);
+            return $this->db->insert_id();
+        } else if ($action == 'update' && intval($id) > 0) {
+            $this->db->update('article', $article, array('id' => $id));
+        }
+    }
+    public function saveAuthorData($action, $author, $id = 0)
+    {
+        if ($action == 'insert') {
+            $result = $this->db->select('id')->from('article_author')->where('name', trim($author['name']))->get()->row_array();
+            if ($result['id']) {
+                return $result['id'];
+            }
+            $insert_arr = array(
+                'name' => addslashes(trim($author['name'])),
+                'url' => trim($author['url']),
+            );
+            $this->db->insert('article_author', $insert_arr);
+            return $this->db->insert_id();
+        } else if ($action == 'update' && intval($id) > 0) {
+            $this->db->update('article_author', $author, array('id' => $id));
+        }
+    }
+    public function savePublisherData($action, $publisher, $id = 0)
+    {
+        if ($action == 'insert') {
+            $result = $this->db->select('id')->from('article_publisher')->where('name', trim($publisher['name']))->get()->row_array();
+            if ($result['id']) {
+                return $result['id'];
+            }
+            $insert_arr = array(
+                'name' => addslashes(trim($publisher['name'])),
+                'logo_url' => trim($publisher['logo']),
+                'width' => trim($publisher['width']),
+                'height' => trim($publisher['height']),
+            );
+            $this->db->insert('article_publisher', $insert_arr);
+            return $this->db->insert_id();
+        } else if ($action == 'update' && intval($id) > 0) {
+            $this->db->update('article_publisher', $publisher, array('id' => $id));
+        }
+    }
+    public function saveArticleMap($map)
+    {
+        $this->db->insert('article_map', $map);
+    }
+    public function saveKeywords($keywords, $id)
+    {
+        $this->db->where('article_id', $id);
+        $this->db->delete('article_keywords');
+        $insert_data = array();
+        foreach ($keywords as $keyword) {
+            $insert_data[] = array('article_id' => $id, 'keyword' => $keyword);
+        }
+        $this->db->insert_batch('article_keywords', $insert_data);
+    }
     public function updateArticle($article_arr, $id)
     {
-        echo "<pre>"; print_r($article_arr);exit;
-        $this->db->update('demo', $article_arr, array('id' => $id));
-    }
+        if (intval($id) > 0) {
+            if ($this->checkArticleExists($id) == false) {
+                return array('status' => false, 'message' => 'Invalid articleId provided.');
+            }
 
+            if (!empty($article_arr['article'])) {
+                $article_resp = $this->validateFields(array('name', 'image', 'url', 'headline', 'language', 'section', 'body'), $article_arr['article'], 'article');
+                if ($article_resp == false) {
+                    return array('status' => false, 'message' => 'Invalid data provided for article\'s fields.');
+                }
+            }
+
+            if (!empty($article_arr['author'])) {
+                $author_resp = $this->validateFields(array('name', 'url'), $article_arr['author'], 'author');
+                if ($author_resp == false) {
+                    return array('status' => false, 'message' => 'Invalid data provided for author\'s fields.');
+                }
+            }
+
+            if (!empty($article_arr['publisher'])) {
+                $publisher_resp = $this->validateFields(array('name', 'logo_url', 'width', 'height', 'url'), $article_arr['publisher'], 'publisher');
+                if ($publisher_resp == false) {
+                    return array('status' => false, 'message' => 'Invalid data provided for publisher\'s fields.');
+                }
+            }
+
+            $article_map = $this->getArticlemap($id);
+            if (!empty($article_resp)) {
+                $this->saveArticleData('update', $article_resp, $id);
+            }
+
+            if (!empty($author_resp) && $article_map['author_id']) {
+                $this->saveAuthorData('update', $author_resp, $article_map['author_id']);
+            }
+
+            if (!empty($publisher_resp) && $article_map['publisher_id']) {
+                $this->savePublisherData('update', $publisher_resp, $article_map['publisher_id']);
+            }
+            return array('status' => true, 'message' => 'Article updated successfully.');
+        } else {
+            return array('status' => false, 'message' => 'Invalid articleId provided.');
+        }
+    }
+    public function checkArticleExists($id)
+    {
+        $id = $this->db->select('id')->from('article')->where('id', $id)->get()->row_array();
+        return ($id['id']) ? true : false;
+    }
+    public function validateFields($fields, $data, $key)
+    {
+        $update_fields = array();
+        foreach ($fields as $field) {
+            if (!empty($data[$field])) {
+                $update_fields[$field] = trim($data[$field]);
+            }
+        }
+        return (!empty($update_fields)) ? $update_fields : false;
+    }
+    public function getArticlemap($id)
+    {
+        return $this->db->select('author_id, publisher_id')->from('article_map')->where('article_id', $id)->get()->row_array();
+    }
     public function deleteArticle($id)
     {
         if (intval($id) > 0) {
-            $article = $this->db->select('id')->from('article')->where('id', $id)->get()->row_array();
-            if ($article['id']) {
+            if ($this->checkArticleExists($id) == true) {
                 $this->db->where('id', $id);
                 $this->db->update('article', array('active' => '0'));
                 return array('status' => false, 'msg' => 'Article deleted successfully.');
