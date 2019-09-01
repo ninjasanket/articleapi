@@ -8,12 +8,12 @@ class Article_model extends CI_Model
 
     /**
     #TODO: 1. limit offeset
-    2. add dates
+           2. add dates
      */
 
     public function getArticles($id)
     {
-        if (intval($id) > 0 && $this->checkArticleExists($id) == false) {
+        if (($id && !intval($id) ) || $this->checkArticleExists($id) == false) {
             return array('status' => false, 'message' => 'Invalid article id provided.');
         }
         $this->db->select('a.*, aa.name as authorName, aa.url as authorUrl, ap.name as publisherName, ap.url as publisherUrl, ap.logo_url as logoUrl, ap.width, ap.height');
@@ -28,9 +28,6 @@ class Article_model extends CI_Model
             $single = true;
         }
         $article_data = $this->db->get()->result_array();
-        // if (empty($article_data)) {
-        //     return array('status' => false, 'message' => 'Article does not exists.');
-        // }
         $api_resp = $this->formatResponse($article_data, $single);
         return $api_resp;
     }
@@ -74,7 +71,7 @@ class Article_model extends CI_Model
 
             $this->saveArticleMap($map);
             if (count($article_arr['keywords']) > 0 && $map['article_id']) {
-                $this->saveKeywords($article_arr['keywords'], $map['article_id']);
+                $this->saveKeywords('insert', $article_arr['keywords'], $map['article_id']);
             }
             return array('status' => true, 'msg' => 'Article saved successfully.', 'articleId' => (int) $map['article_id']);
         } else {
@@ -151,6 +148,7 @@ class Article_model extends CI_Model
             $insert_arr = array(
                 'name' => addslashes(trim($publisher['name'])),
                 'logo_url' => trim($publisher['logo']),
+                'url' => trim($publisher['url']),
                 'width' => trim($publisher['width']),
                 'height' => trim($publisher['height']),
             );
@@ -164,10 +162,12 @@ class Article_model extends CI_Model
     {
         $this->db->insert('article_map', $map);
     }
-    public function saveKeywords($keywords, $id)
+    public function saveKeywords($action, $keywords, $id)
     {
-        $this->db->where('article_id', $id);
-        $this->db->delete('article_keywords');
+        if ($action == 'update' && $id) {
+            $this->db->where('article_id', $id);
+            $this->db->delete('article_keywords');
+        } 
         $insert_data = array();
         foreach ($keywords as $keyword) {
             $insert_data[] = array('article_id' => $id, 'keyword' => $keyword);
@@ -176,10 +176,12 @@ class Article_model extends CI_Model
     }
     public function updateArticle($article_arr, $id)
     {
-        if (intval($id) > 0) {
-            if ($this->checkArticleExists($id) == false) {
-                return array('status' => false, 'message' => 'Invalid articleId provided.');
-            }
+        if ($id && !intval($id)) {
+            return array('status' => false, 'message' => 'Invalid articleId provided.');
+        } 
+        if ($this->checkArticleExists($id) == false) {
+            return array('status' => false, 'message' => 'Invalid articleId provided.');
+        }
 
             if (!empty($article_arr['article'])) {
                 $article_resp = $this->validateFields(array('name', 'image', 'url', 'headline', 'language', 'section', 'body'), $article_arr['article'], 'article');
@@ -214,13 +216,14 @@ class Article_model extends CI_Model
             if (!empty($publisher_resp) && $article_map['publisher_id']) {
                 $this->savePublisherData('update', $publisher_resp, $article_map['publisher_id']);
             }
+            if (!empty($article_arr['keywords'])) {
+                $this->saveKeywords('update', $article_arr['keywords'], $id);
+            } 
             return array('status' => true, 'message' => 'Article updated successfully.');
-        } else {
-            return array('status' => false, 'message' => 'Invalid articleId provided.');
-        }
     }
     public function checkArticleExists($id)
     {
+        $id = intval($id);  
         $id = $this->db->select('id')->from('article')->where('id', $id)->get()->row_array();
         return ($id['id']) ? true : false;
     }
