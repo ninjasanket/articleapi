@@ -32,7 +32,7 @@ class Article_model extends CI_Model
         return $api_resp;
     }
 
-    public function formatResponse($article_result)
+    public function formatResponse($article_result, $single)
     {
         $response = $resp = array();
         foreach ($article_result as $article) {

@@ -36,7 +36,7 @@ class Login extends REST_Controller
             $response = ['status' => $status, 'token' => $token];
             $this->response($response, $status);
         } else {
-            $this->response(['msg' => 'Invalid username or password!'], parent::HTTP_NOT_FOUND);
+            $this->response(['msg' => 'Invalid username or password!'], parent::HTTP_UNAUTHORIZED);
         }
     }
 }
