@@ -46,7 +46,7 @@ class Article_model extends CI_Model
             $response['dateCreated'] = gmdate("Y-m-d\TH:i:s", strtotime($article['created_at']));
             $response['dateModified'] = gmdate("Y-m-d\TH:i:s", strtotime($article['modified_at']));
             $response['inLanguage'] = $article['language'];
-            $response['contentLocation'] = array('name' => $article['name']);
+            $response['contentLocation'] = array('name' => $article['location']);
             $response['author'] = array('name' => $article['authorName'], 'url' => $article['authorUrl']);
             $response['publisher'] = array('name' => $article['publisherName'], 'url' => $article['publisherUrl'], 'logo' => array('url' => $article['logoUrl'], 'width' => $article['width'], 'height' => $article['height']));
             $response['keywords'] = $this->getKeyswords($article['id']);
@@ -91,7 +91,7 @@ class Article_model extends CI_Model
     public function validatePostData($post_data)
     {
         $required = array(
-            'article' => array('image', 'url', 'headline', 'name', 'language', 'section', 'body', 'publishedDate'),
+            'article' => array('image', 'url', 'headline', 'location', 'language', 'section', 'body', 'publishedDate'),
             'author' => array('name', 'url'),
             'publisher' => array('name', 'url', 'logo', 'width', 'height'),
         );
@@ -119,13 +119,13 @@ class Article_model extends CI_Model
     public function saveArticleData($action, $article, $id = 0)
     {
         if ($action == 'insert') {
-
-            $result = $this->db->select('id')->from('article')->where('name', trim($article['name']))->get()->row_array();
+            $result = $this->db->select('id')->from('article')->where('headline', trim($article['headline']))->get()->row_array();
             if ($result['id']) {
-                return array('status' => false, 'message' => 'Article name already exists.');
+                return array('status' => false, 'message' => 'Article headline already exists.');
             }
+        
             $insert_arr = array(
-                'name' => trim($article['name']),
+                'location' => trim($article['location']),
                 'image' => trim($article['image']),
                 'url' => trim($article['url']),
                 'headline' => trim($article['headline']),
@@ -212,7 +212,7 @@ class Article_model extends CI_Model
             return array('status' => false, 'message' => 'Data missing for update.');
         }
         if (!empty($article_arr['article'])) {
-            $article_resp = $this->validateFields(array('name', 'image', 'url', 'headline', 'language', 'section', 'body'), $article_arr['article'], 'article');
+            $article_resp = $this->validateFields(array('location', 'image', 'url', 'headline', 'language', 'section', 'body'), $article_arr['article'], 'article');
             if ($article_resp == false) {
                 return array('status' => false, 'message' => 'Invalid data provided for article\'s fields.');
             }

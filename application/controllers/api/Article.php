@@ -32,7 +32,7 @@ class Article extends REST_Controller
         try {
             $data = AUTHORIZATION::validateToken($token);
             if ($data === false) {
-                $response = array('error' => array('message' => 'Unauthorized Access', 'type' => 'OAuthException', 'code' => REST_Controller::HTTP_UNAUTHORIZED));
+                $response = array('message' => 'Unauthorized Access', 'type' => 'OAuthException', 'code' => REST_Controller::HTTP_UNAUTHORIZED, 'status' => false);
                 header('Content-Type: application/json');
                 echo json_encode($response);
                 exit();
@@ -40,7 +40,7 @@ class Article extends REST_Controller
                 return $data;
             }
         } catch (Exception $e) {
-            $response = array('error' => array('message' => 'Unauthorized Access', 'type' => 'OAuthException', 'code' => REST_Controller::HTTP_UNAUTHORIZED));
+            $response = array('message' => 'Unauthorized Access', 'type' => 'OAuthException', 'code' => REST_Controller::HTTP_UNAUTHORIZED, 'status' => false);
             header('Content-Type: application/json');
             echo json_encode($response);
         }
