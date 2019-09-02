@@ -64,7 +64,11 @@ class Article_model extends CI_Model
     {
         $validate_resp = $this->validatePostData($article_arr);
         if ($validate_resp['status'] == true) {
-            $map['article_id'] = $this->saveArticleData('insert', $article_arr['article']);
+            $article_resp = $this->saveArticleData('insert', $article_arr['article']);
+            if (isset($article_resp['status']) && $article_resp['status'] == false) {
+                return $article_resp; 
+            }
+            $map['article_id'] = $article_resp;
             $map['author_id'] = $this->saveAuthorData('insert', $article_arr['author']);
             $map['publisher_id'] = $this->savePublisherData('insert', $article_arr['publisher']);
 
@@ -97,7 +101,7 @@ class Article_model extends CI_Model
     {
         foreach ($validator as $v) {
             if (empty($data[$v])) {
-                return array('status' => false, 'messsage' => "Data missing for $k $v.");
+                return array('status' => false, 'messsage' => "Data missing for " . ucwords($k) . "-" . ucwords($v). ".");
             }
         }
         return array('status' => true);
@@ -105,6 +109,11 @@ class Article_model extends CI_Model
     public function saveArticleData($action, $article, $id = 0)
     {
         if ($action == 'insert') {
+
+            $result = $this->db->select('id')->from('article')->where('name', trim($article['name']))->get()->row_array();
+            if ($result['id']) {
+                return array('status' => false, 'message' => 'Article name already exists.');
+            }
             $insert_arr = array(
                 'name' => trim($article['name']),
                 'image' => trim($article['image']),
@@ -175,12 +184,9 @@ class Article_model extends CI_Model
     }
     public function updateArticle($article_arr, $id)
     {
-        if ($id && !intval($id)) {
+        if (($id && !intval($id)) || $this->checkArticleExists($id) == false) {
             return array('status' => false, 'message' => 'Invalid articleId provided.');
         } 
-        if ($this->checkArticleExists($id) == false) {
-            return array('status' => false, 'message' => 'Invalid articleId provided.');
-        }
 
             if (!empty($article_arr['article'])) {
                 $article_resp = $this->validateFields(array('name', 'image', 'url', 'headline', 'language', 'section', 'body'), $article_arr['article'], 'article');
