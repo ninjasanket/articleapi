@@ -7,14 +7,17 @@ class Article_model extends CI_Model
 
     /**
     #TODO: 1. limit offeset
-    2. add dates
      */
 
     public function getArticles($id)
     {
-        if (($id && !intval($id)) || $this->checkArticleExists($id) == false) {
+        if (($id && !intval($id))) {
             return array('status' => false, 'message' => 'Invalid articleId provided.');
         }
+        if ($id && $this->checkArticleExists($id) == false) {
+            return array('status' => false, 'message' => 'Article not present in system.');
+        }
+
         $this->db->select('a.*, aa.name as authorName, aa.url as authorUrl, ap.name as publisherName, ap.url as publisherUrl, ap.logo_url as logoUrl, ap.width, ap.height');
         $this->db->from('article a');
         $this->db->join('article_map am', 'am.article_id = a.id');
@@ -27,7 +30,8 @@ class Article_model extends CI_Model
             $single = true;
         }
         $article_data = $this->db->get()->result_array();
-        $api_resp = $this->formatResponse($article_data, $single);
+        $api_resp['data'] = $this->formatResponse($article_data, $single);
+        $api_resp['status'] = true; 
         return $api_resp;
     }
 
@@ -38,6 +42,9 @@ class Article_model extends CI_Model
             $response['image'] = $article['image'];
             $response['url'] = $article['url'];
             $response['headline'] = $article['headline'];
+            $response['datePublished'] = gmdate("Y-m-d\TH:i:s", strtotime($article['published_at']));
+            $response['dateCreated'] = gmdate("Y-m-d\TH:i:s", strtotime($article['created_at']));
+            $response['dateModified'] = gmdate("Y-m-d\TH:i:s", strtotime($article['modified_at']));
             $response['inLanguage'] = $article['language'];
             $response['contentLocation'] = array('name' => $article['name']);
             $response['author'] = array('name' => $article['authorName'], 'url' => $article['authorUrl']);
@@ -122,6 +129,9 @@ class Article_model extends CI_Model
                 'language' => trim($article['language']),
                 'section' => trim($article['section']),
                 'body' => trim($article['body']),
+                'published_at' => trim($article['publishedDate']),
+                'created_at' => date("Y-m-d H:m:s"),
+                'modified_at' => date("Y-m-d H:m:s"),
             );
             $this->db->insert('article', $insert_arr);
             return $this->db->insert_id();
@@ -139,6 +149,8 @@ class Article_model extends CI_Model
             $insert_arr = array(
                 'name' => addslashes(trim($author['name'])),
                 'url' => trim($author['url']),
+                'created_at' => date("Y-m-d H:m:s"),
+                'modified_at' => date("Y-m-d H:m:s"),
             );
             $this->db->insert('article_author', $insert_arr);
             return $this->db->insert_id();
@@ -159,6 +171,8 @@ class Article_model extends CI_Model
                 'url' => trim($publisher['url']),
                 'width' => trim($publisher['width']),
                 'height' => trim($publisher['height']),
+                'created_at' => date("Y-m-d H:m:s"),
+                'modified_at' => date("Y-m-d H:m:s"),
             );
             $this->db->insert('article_publisher', $insert_arr);
             return $this->db->insert_id();
@@ -184,8 +198,11 @@ class Article_model extends CI_Model
     }
     public function updateArticle($article_arr, $id)
     {
-        if (($id && !intval($id)) || $this->checkArticleExists($id) == false) {
+        if (($id && !intval($id))) {
             return array('status' => false, 'message' => 'Invalid articleId provided.');
+        }
+        if ($id && $this->checkArticleExists($id) == false) {
+            return array('status' => false, 'message' => 'Article not present in system.');
         }
 
         if (!empty($article_arr['article'])) {
@@ -252,9 +269,9 @@ class Article_model extends CI_Model
             if ($this->checkArticleExists($id) == true) {
                 $this->db->where('id', $id);
                 $this->db->update('article', array('active' => '0'));
-                return array('status' => false, 'messsage' => 'Article deleted successfully.');
+                return array('status' => true, 'messsage' => 'Article deleted successfully.');
             } else {
-                return array('status' => false, 'messsage' => 'Invalid articleId provided.');
+                return array('status' => false, 'message' => 'Article not present in system.');
             }
         } else {
             return array('status' => false, 'messsage' => 'Invalid articleId provided.');

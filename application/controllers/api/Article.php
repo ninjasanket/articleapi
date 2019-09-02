@@ -47,12 +47,12 @@ class Article extends REST_Controller
     public function index_get($id = 0)
     {
         if (!empty($id)) {
-            $data = $this->article->getArticles($id);
+            $resp = $this->article->getArticles($id);
         } else {
-            $data = $this->article->getArticles();
+            $resp = $this->article->getArticles();
         }
-
-        $this->response($data, REST_Controller::HTTP_OK);
+        $resp['code'] = REST_Controller::HTTP_OK;
+        $this->response($resp, REST_Controller::HTTP_OK);
     }
 
     /**
@@ -64,6 +64,7 @@ class Article extends REST_Controller
     {
         $input = $this->input->post();
         $resp = $this->article->saveArticle($input);
+        $resp['code'] = REST_Controller::HTTP_OK;
         $this->response($resp, REST_Controller::HTTP_OK);
     }
 
@@ -76,7 +77,7 @@ class Article extends REST_Controller
     {
         $input = $this->put();
         $resp = $this->article->updateArticle($input, $id);
-
+        $resp['code'] = REST_Controller::HTTP_OK;
         $this->response($resp, REST_Controller::HTTP_OK);
     }
 
@@ -88,6 +89,7 @@ class Article extends REST_Controller
     public function index_delete($id)
     {
         $resp = $this->article->deleteArticle($id);
+        $resp['code'] = REST_Controller::HTTP_OK;
         $this->response($resp, REST_Controller::HTTP_OK);
     }
 
