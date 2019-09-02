@@ -30,7 +30,7 @@ class Article_model extends CI_Model
             $single = true;
         }
         $article_data = $this->db->get()->result_array();
-        $api_resp['data'] = $this->formatResponse($article_data, $single);
+        $api_resp['list'] = $this->formatResponse($article_data, $single);
         $api_resp['status'] = true; 
         return $api_resp;
     }
