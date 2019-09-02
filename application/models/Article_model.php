@@ -28,7 +28,7 @@ class Article_model extends CI_Model
         }
         $article_data = $this->db->get()->result_array();
         $api_resp = $this->formatResponse($article_data, $single);
-        return $api_resp;
+        return $api_resp; 
     }
 
     public function formatResponse($article_result, $single)
@@ -72,7 +72,7 @@ class Article_model extends CI_Model
             if (count($article_arr['keywords']) > 0 && $map['article_id']) {
                 $this->saveKeywords('insert', $article_arr['keywords'], $map['article_id']);
             }
-            return array('status' => true, 'msg' => 'Article saved successfully.', 'articleId' => (int) $map['article_id']);
+            return array('status' => true, 'messsage' => 'Article saved successfully.', 'articleId' => (int) $map['article_id']);
         } else {
             return $validate_resp;
         }
@@ -82,7 +82,7 @@ class Article_model extends CI_Model
         $required = array(
             'article' => array('image', 'url', 'headline', 'name', 'language', 'section', 'body', 'publishedDate'),
             'author' => array('name', 'url'),
-            'publisher' => array('name', 'url'),
+            'publisher' => array('name', 'url', 'logo', 'width', 'height'),
         );
         $validate_resp = array('status' => true);
         foreach ($required as $k => $v) {
@@ -97,7 +97,7 @@ class Article_model extends CI_Model
     {
         foreach ($validator as $v) {
             if (empty($data[$v])) {
-                return array('status' => false, 'msg' => "$k $v is required field");
+                return array('status' => false, 'messsage' => "$k $v is required field");
             }
         }
         return array('status' => true);
@@ -246,12 +246,12 @@ class Article_model extends CI_Model
             if ($this->checkArticleExists($id) == true) {
                 $this->db->where('id', $id);
                 $this->db->update('article', array('active' => '0'));
-                return array('status' => false, 'msg' => 'Article deleted successfully.');
+                return array('status' => false, 'messsage' => 'Article deleted successfully.');
             } else {
-                return array('status' => false, 'msg' => 'Article not exist in system.');
+                return array('status' => false, 'messsage' => 'Invalid articleId.');
             }
         } else {
-            return array('status' => false, 'msg' => 'Invalid article Id.');
+            return array('status' => false, 'messsage' => 'Invalid articleId.');
         }
     }
 }

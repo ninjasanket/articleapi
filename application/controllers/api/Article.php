@@ -25,7 +25,6 @@ class Article extends REST_Controller
      *
      * @return Response
      */
-
     public function validateRequest()
     {
         $headers = $this->input->request_headers();
@@ -33,18 +32,18 @@ class Article extends REST_Controller
         try {
             $data = AUTHORIZATION::validateToken($token);
             if ($data === false) {
-                $response = array('status' => REST_Controller::HTTP_UNAUTHORIZED, 'msg' => 'Unauthorized Access!');
+                $response = array('error' => array('message' => 'Unauthorized Access', 'type' => 'OAuthException', 'code' => REST_Controller::HTTP_UNAUTHORIZED));
                 echo json_encode($response);
                 exit();
             } else {
                 return $data;
             }
         } catch (Exception $e) {
-            $status = REST_Controller::HTTP_UNAUTHORIZED;
-            $response = array('status' => REST_Controller::HTTP_UNAUTHORIZED, 'msg' => 'Unauthorized Access!');
+            $response = array('error' => array('message' => 'Unauthorized Access', 'type' => 'OAuthException', 'code' => REST_Controller::HTTP_UNAUTHORIZED));
             echo json_encode($response);
         }
     }
+
     public function index_get($id = 0)
     {
         if (!empty($id)) {
