@@ -201,13 +201,16 @@ class Article_model extends CI_Model
     }
     public function updateArticle($article_arr, $id)
     {
-        if (($id && !intval($id))) {
+        if (!$id || !intval($id)) {
             return array('status' => false, 'message' => 'Invalid articleId provided.');
         }
         if ($id && $this->checkArticleExists($id) == false) {
             return array('status' => false, 'message' => 'Article not present in system.');
         }
 
+        if (empty($article_arr['article']) && empty($article_arr['author']) && empty($article_arr['publisher'])) {
+            return array('status' => false, 'message' => 'Data missing for update.');
+        }
         if (!empty($article_arr['article'])) {
             $article_resp = $this->validateFields(array('name', 'image', 'url', 'headline', 'language', 'section', 'body'), $article_arr['article'], 'article');
             if ($article_resp == false) {
