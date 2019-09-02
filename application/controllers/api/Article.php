@@ -34,7 +34,7 @@ class Article extends REST_Controller
             $data = AUTHORIZATION::validateToken($token);
             if ($data === false) {
                 $response = array('status' => REST_Controller::HTTP_UNAUTHORIZED, 'msg' => 'Unauthorized Access!');
-                $this->response($response, REST_Controller::HTTP_UNAUTHORIZED);
+                echo json_encode($response);
                 exit();
             } else {
                 return $data;
@@ -42,7 +42,7 @@ class Article extends REST_Controller
         } catch (Exception $e) {
             $status = REST_Controller::HTTP_UNAUTHORIZED;
             $response = array('status' => REST_Controller::HTTP_UNAUTHORIZED, 'msg' => 'Unauthorized Access!');
-            $this->response($response, REST_Controller::HTTP_UNAUTHORIZED);
+            echo json_encode($response);
         }
     }
     public function index_get($id = 0)
