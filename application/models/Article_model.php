@@ -223,7 +223,7 @@ class Article_model extends CI_Model
     public function checkArticleExists($id)
     {
         $id = intval($id);  
-        $id = $this->db->select('id')->from('article')->where('id', $id)->get()->row_array();
+        $id = $this->db->select('id')->from('article')->where('id', $id)->where('active', '1')->get()->row_array();
         return ($id['id']) ? true : false;
     }
     public function validateFields($fields, $data, $key)
@@ -248,10 +248,10 @@ class Article_model extends CI_Model
                 $this->db->update('article', array('active' => '0'));
                 return array('status' => false, 'messsage' => 'Article deleted successfully.');
             } else {
-                return array('status' => false, 'messsage' => 'Invalid articleId.');
+                return array('status' => false, 'messsage' => 'Invalid articleId provided.');
             }
         } else {
-            return array('status' => false, 'messsage' => 'Invalid articleId.');
+            return array('status' => false, 'messsage' => 'Invalid articleId provided.');
         }
     }
 }
