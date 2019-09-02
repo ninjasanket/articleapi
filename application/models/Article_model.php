@@ -102,6 +102,9 @@ class Article_model extends CI_Model
                 return $validate_resp;
             }
         }
+        if (strtotime($post_data['article']['publishedDate']) < time()) {
+            $validate_resp = array('status' => false, 'message' => 'Article publish time is incorrect.');
+        }
         return $validate_resp;
     }
     public function validate($data, $validator, $k)
