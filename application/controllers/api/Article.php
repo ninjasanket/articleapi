@@ -92,4 +92,3 @@ class Article extends REST_Controller
     }
 
 }
-

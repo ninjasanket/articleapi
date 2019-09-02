@@ -7,12 +7,12 @@ class Article_model extends CI_Model
 
     /**
     #TODO: 1. limit offeset
-           2. add dates
+    2. add dates
      */
 
     public function getArticles($id)
     {
-        if (($id && !intval($id) ) || $this->checkArticleExists($id) == false) {
+        if (($id && !intval($id)) || $this->checkArticleExists($id) == false) {
             return array('status' => false, 'message' => 'Invalid articleId provided.');
         }
         $this->db->select('a.*, aa.name as authorName, aa.url as authorUrl, ap.name as publisherName, ap.url as publisherUrl, ap.logo_url as logoUrl, ap.width, ap.height');
@@ -28,7 +28,7 @@ class Article_model extends CI_Model
         }
         $article_data = $this->db->get()->result_array();
         $api_resp = $this->formatResponse($article_data, $single);
-        return $api_resp; 
+        return $api_resp;
     }
 
     public function formatResponse($article_result, $single)
@@ -66,7 +66,7 @@ class Article_model extends CI_Model
         if ($validate_resp['status'] == true) {
             $article_resp = $this->saveArticleData('insert', $article_arr['article']);
             if (isset($article_resp['status']) && $article_resp['status'] == false) {
-                return $article_resp; 
+                return $article_resp;
             }
             $map['article_id'] = $article_resp;
             $map['author_id'] = $this->saveAuthorData('insert', $article_arr['author']);
@@ -101,7 +101,7 @@ class Article_model extends CI_Model
     {
         foreach ($validator as $v) {
             if (empty($data[$v])) {
-                return array('status' => false, 'messsage' => "Data missing for " . ucwords($k) . "-" . ucwords($v). ".");
+                return array('status' => false, 'messsage' => "Data missing for " . ucwords($k) . "-" . ucwords($v) . ".");
             }
         }
         return array('status' => true);
@@ -175,7 +175,7 @@ class Article_model extends CI_Model
         if ($action == 'update' && $id) {
             $this->db->where('article_id', $id);
             $this->db->delete('article_keywords');
-        } 
+        }
         $insert_data = array();
         foreach ($keywords as $keyword) {
             $insert_data[] = array('article_id' => $id, 'keyword' => $keyword);
@@ -186,49 +186,49 @@ class Article_model extends CI_Model
     {
         if (($id && !intval($id)) || $this->checkArticleExists($id) == false) {
             return array('status' => false, 'message' => 'Invalid articleId provided.');
-        } 
+        }
 
-            if (!empty($article_arr['article'])) {
-                $article_resp = $this->validateFields(array('name', 'image', 'url', 'headline', 'language', 'section', 'body'), $article_arr['article'], 'article');
-                if ($article_resp == false) {
-                    return array('status' => false, 'message' => 'Invalid data provided for article\'s fields.');
-                }
+        if (!empty($article_arr['article'])) {
+            $article_resp = $this->validateFields(array('name', 'image', 'url', 'headline', 'language', 'section', 'body'), $article_arr['article'], 'article');
+            if ($article_resp == false) {
+                return array('status' => false, 'message' => 'Invalid data provided for article\'s fields.');
             }
+        }
 
-            if (!empty($article_arr['author'])) {
-                $author_resp = $this->validateFields(array('name', 'url'), $article_arr['author'], 'author');
-                if ($author_resp == false) {
-                    return array('status' => false, 'message' => 'Invalid data provided for author\'s fields.');
-                }
+        if (!empty($article_arr['author'])) {
+            $author_resp = $this->validateFields(array('name', 'url'), $article_arr['author'], 'author');
+            if ($author_resp == false) {
+                return array('status' => false, 'message' => 'Invalid data provided for author\'s fields.');
             }
+        }
 
-            if (!empty($article_arr['publisher'])) {
-                $publisher_resp = $this->validateFields(array('name', 'logo_url', 'width', 'height', 'url'), $article_arr['publisher'], 'publisher');
-                if ($publisher_resp == false) {
-                    return array('status' => false, 'message' => 'Invalid data provided for publisher\'s fields.');
-                }
+        if (!empty($article_arr['publisher'])) {
+            $publisher_resp = $this->validateFields(array('name', 'logo_url', 'width', 'height', 'url'), $article_arr['publisher'], 'publisher');
+            if ($publisher_resp == false) {
+                return array('status' => false, 'message' => 'Invalid data provided for publisher\'s fields.');
             }
+        }
 
-            $article_map = $this->getArticlemap($id);
-            if (!empty($article_resp)) {
-                $this->saveArticleData('update', $article_resp, $id);
-            }
+        $article_map = $this->getArticlemap($id);
+        if (!empty($article_resp)) {
+            $this->saveArticleData('update', $article_resp, $id);
+        }
 
-            if (!empty($author_resp) && $article_map['author_id']) {
-                $this->saveAuthorData('update', $author_resp, $article_map['author_id']);
-            }
+        if (!empty($author_resp) && $article_map['author_id']) {
+            $this->saveAuthorData('update', $author_resp, $article_map['author_id']);
+        }
 
-            if (!empty($publisher_resp) && $article_map['publisher_id']) {
-                $this->savePublisherData('update', $publisher_resp, $article_map['publisher_id']);
-            }
-            if (!empty($article_arr['keywords'])) {
-                $this->saveKeywords('update', $article_arr['keywords'], $id);
-            } 
-            return array('status' => true, 'message' => 'Article updated successfully.');
+        if (!empty($publisher_resp) && $article_map['publisher_id']) {
+            $this->savePublisherData('update', $publisher_resp, $article_map['publisher_id']);
+        }
+        if (!empty($article_arr['keywords'])) {
+            $this->saveKeywords('update', $article_arr['keywords'], $id);
+        }
+        return array('status' => true, 'message' => 'Article updated successfully.');
     }
     public function checkArticleExists($id)
     {
-        $id = intval($id);  
+        $id = intval($id);
         $id = $this->db->select('id')->from('article')->where('id', $id)->where('active', '1')->get()->row_array();
         return ($id['id']) ? true : false;
     }
@@ -261,4 +261,3 @@ class Article_model extends CI_Model
         }
     }
 }
-

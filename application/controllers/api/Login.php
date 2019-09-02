@@ -40,4 +40,3 @@ class Login extends REST_Controller
         }
     }
 }
-
