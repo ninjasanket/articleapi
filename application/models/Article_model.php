@@ -13,7 +13,7 @@ class Article_model extends CI_Model
     public function getArticles($id)
     {
         if (($id && !intval($id) ) || $this->checkArticleExists($id) == false) {
-            return array('status' => false, 'message' => 'Invalid article id provided.');
+            return array('status' => false, 'message' => 'Invalid articleId provided.');
         }
         $this->db->select('a.*, aa.name as authorName, aa.url as authorUrl, ap.name as publisherName, ap.url as publisherUrl, ap.logo_url as logoUrl, ap.width, ap.height');
         $this->db->from('article a');
@@ -97,7 +97,7 @@ class Article_model extends CI_Model
     {
         foreach ($validator as $v) {
             if (empty($data[$v])) {
-                return array('status' => false, 'messsage' => "$k $v is required field");
+                return array('status' => false, 'messsage' => "Data missing for $k $v.");
             }
         }
         return array('status' => true);
